@@ -12,6 +12,7 @@ function ProductList({products}) {
       href:`/product?_id=${product._id}`
     }))
   }
+ 
   return <Card.Group stackable items={mapProductsToItems(products)} itemsPerRow="3" centered />
 }
 
