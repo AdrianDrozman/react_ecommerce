@@ -7,12 +7,16 @@ async function connectDb() {
     return;
   }
   try {
-    const db = await mongoose.connect(process.env.MONGO_SRV, {
-      useNewUrlParser: true,
-      useCreateIndex: true,
-      useFindAndModify: false,
-      useUnifiedTopology: true
-    });
+    const db = await mongoose.connect(
+      process.env.MONGO_SRV,
+      {
+        dbName: 'reserve',
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true
+      }
+    );
     console.log('DB Connected');
     connection.isConnected = db.connections[0].readyState;
   } catch (error) {
