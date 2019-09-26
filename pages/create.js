@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-
+import axios from 'axios'
 import { Form,Input,TextArea,Button,Image,Message,Header,Icon } from 'semantic-ui-react';
+import baseUrl from '../utils/baseUrl';
 
 const INITIAL_PRODUCT={
   name:"",
@@ -13,10 +14,19 @@ function CreateProduct() {
   const [product,setProduct]=useState({INITIAL_PRODUCT});
   const [mediaPreview,setMediaPreview]=useState('');
   const [success,setSuccess] = useState(false);
+  const [loading,setLoading] = useState(false)
 
-  const handleSubmit =(e)=>{
+  const handleSubmit = async (e)=>{
     e.preventDefault();
-    console.log(product)
+    setLoading(true)
+    const mediaUrl =await handleImageUpload()
+    console.log({mediaUrl})
+    const url = `${baseUrl}/api/product`
+    const {name,price,description} = product
+    const payload={name,price,description,mediaUrl}
+    const response = await axios.post(url,payload)
+    setLoading(false)
+    console.log({response})
     setProduct(INITIAL_PRODUCT);
     setSuccess(true);
   
@@ -32,14 +42,25 @@ function CreateProduct() {
      
   }
 }
-  const {name,price,description} = product;
+const {name,price,description} = product;
+
+  const handleImageUpload= async ()=>{
+    const data=new FormData();
+    data.append('file',product.media)
+    data.append('upload_preset','react_reserve')
+    data.append('cloud_name','dme737cmn')
+    const response = await axios.post(process.env.CLOUDINARY_URL,data)
+    const mediaUrl = response.data.url
+    return mediaUrl;
+  }
+
   return (
     <>
       <Header as="h2" block>
         <Icon name="add" color="orange"/>
         Create New Product
       </Header>
-      <Form success={success} onSubmit={handleSubmit}>
+      <Form loading={loading} success={success} onSubmit={handleSubmit}>
         <Message success icon="check" header="Success!" content="Your Product has been posted" />
         <Form.Group widths="equal">
           <Form.Field
@@ -85,6 +106,7 @@ function CreateProduct() {
         />
         <Form.Field
         control={Button}
+        disable={loading}
         color="blue"
         icon="pencil alternate"
         content="Submit"
@@ -94,5 +116,6 @@ function CreateProduct() {
     </>
   )
 }
+
 
 export default CreateProduct;
