@@ -1,75 +1,104 @@
-import React, { useState } from 'react'
-import axios from 'axios'
-import { Form,Input,TextArea,Button,Image,Message,Header,Icon } from 'semantic-ui-react';
-import baseUrl from '../utils/baseUrl';
+import React from "react";
+import {
+  Form,
+  Input,
+  TextArea,
+  Button,
+  Image,
+  Message,
+  Header,
+  Icon
+} from "semantic-ui-react";
+import axios from "axios";
+import baseUrl from "../utils/baseUrl";
+import catchErrors from "../utils/catchErrors";
 
-const INITIAL_PRODUCT={
-  name:"",
-  price:"",
-  media:"",
-  description:""
-}
+const INITIAL_PRODUCT = {
+  name: "",
+  price: "",
+  media: "",
+  description: ""
+};
 
 function CreateProduct() {
-  const [product,setProduct]=useState({INITIAL_PRODUCT});
-  const [mediaPreview,setMediaPreview]=useState('');
-  const [success,setSuccess] = useState(false);
-  const [loading,setLoading] = useState(false)
+  const [product, setProduct] = React.useState(INITIAL_PRODUCT);
+  const [mediaPreview, setMediaPreview] = React.useState("");
+  const [success, setSuccess] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [disabled, setDisabled] = React.useState(true);
+  const [error, setError] = React.useState("");
 
-  const handleSubmit = async (e)=>{
-    e.preventDefault();
-    setLoading(true)
-    const mediaUrl =await handleImageUpload()
-    console.log({mediaUrl})
-    const url = `${baseUrl}/api/product`
-    const {name,price,description} = product
-    const payload={name,price,description,mediaUrl}
-    const response = await axios.post(url,payload)
-    setLoading(false)
-    console.log({response})
-    setProduct(INITIAL_PRODUCT);
-    setSuccess(true);
-  
-  }
+  React.useEffect(() => {
+    const isProduct = Object.values(product).every(el => Boolean(el));
+    isProduct ? setDisabled(false) : setDisabled(true);
+  }, [product]);
 
-  const handleChange = event =>{
-    const {name,value,files} = event.target
-    if(name==='media'){
-      setProduct(prevState=>({...prevState,media:files[0]}))
+  function handleChange(event) {
+    const { name, value, files } = event.target;
+    if (name === "media") {
+      setProduct(prevState => ({ ...prevState, media: files[0] }));
       setMediaPreview(window.URL.createObjectURL(files[0]));
-    }else{
-    setProduct((prevState)=>({...prevState,[name]:value}))
-     
+    } else {
+      setProduct(prevState => ({ ...prevState, [name]: value }));
+    }
   }
-}
-const {name,price,description} = product;
 
-  const handleImageUpload= async ()=>{
-    const data=new FormData();
+  async function handleImageUpload() {
+    const data = new FormData();
     data.append('file',product.media)
     data.append('upload_preset','react_reserve')
     data.append('cloud_name','dme737cmn')
-    const response = await axios.post(process.env.CLOUDINARY_URL,data)
-    const mediaUrl = response.data.url
+    const response = await axios.post(process.env.CLOUDINARY_URL, data);
+    const mediaUrl = response.data.url;
     return mediaUrl;
+  }
+
+  async function handleSubmit(event) {
+    try {
+      event.preventDefault();
+      setLoading(true);
+      const mediaUrl = await handleImageUpload();
+      console.log({ mediaUrl });
+      const url = `${baseUrl}/api/product`;
+      const { name, price, description } = product;
+      const payload = { name, price, description, mediaUrl };
+      const response = await axios.post(url, payload);
+      console.log({ response });
+      setProduct(INITIAL_PRODUCT);
+      setSuccess(true);
+    } catch (error) {
+      catchErrors(error, setError);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <>
       <Header as="h2" block>
-        <Icon name="add" color="orange"/>
+        <Icon name="add" color="orange" />
         Create New Product
       </Header>
-      <Form loading={loading} success={success} onSubmit={handleSubmit}>
-        <Message success icon="check" header="Success!" content="Your Product has been posted" />
+      <Form
+        loading={loading}
+        error={Boolean(error)}
+        success={success}
+        onSubmit={handleSubmit}
+      >
+        <Message error header="Oops!" content={error} />
+        <Message
+          success
+          icon="check"
+          header="Success!"
+          content="Your product has been posted"
+        />
         <Form.Group widths="equal">
           <Form.Field
             control={Input}
             name="name"
             label="Name"
             placeholder="Name"
-            type="text"
-            value={name}
+            value={product.name}
             onChange={handleChange}
           />
           <Form.Field
@@ -80,42 +109,39 @@ const {name,price,description} = product;
             min="0.00"
             step="0.01"
             type="number"
-            value={price}
+            value={product.price}
             onChange={handleChange}
           />
           <Form.Field
             control={Input}
             name="media"
             type="file"
-            label="Price"
-            content="Select Image"
             label="Media"
             accept="image/*"
+            content="Select Image"
             onChange={handleChange}
-
           />
         </Form.Group>
-        <Image src={mediaPreview} rounded centered size="medium" />
+        <Image src={mediaPreview} rounded centered size="small" />
         <Form.Field
-        control={TextArea}
-        name="description"
-        label="Description"
-        placeholder="Description"
-        value={description}
-        onChange={handleChange}
+          control={TextArea}
+          name="description"
+          label="Description"
+          placeholder="Description"
+          onChange={handleChange}
+          value={product.description}
         />
         <Form.Field
-        control={Button}
-        disable={loading}
-        color="blue"
-        icon="pencil alternate"
-        content="Submit"
-        type="submit"
+          control={Button}
+          disabled={disabled || loading}
+          color="blue"
+          icon="pencil alternate"
+          content="Submit"
+          type="submit"
         />
       </Form>
     </>
-  )
+  );
 }
-
 
 export default CreateProduct;

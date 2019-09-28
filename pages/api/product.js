@@ -38,17 +38,22 @@ async function handleDeleteRequest(req, res) {
 
 async function handlePostRequest(req,res){
   const { name,price,mediaUrl,description} = req.body;
-
-  if(!name || !price || !description || !mediaUrl){
-    return res.status(422).send("Product missing one or more fields")
+  try {
+    if(!name || !price || !description || !mediaUrl){
+      return res.status(422).send("Product missing one or more fields")
+    }
+  
+    const product =await new Product({
+      name,
+      price,
+      description,
+      mediaUrl
+    }).save()
+  
+    res.status(201).json(product)
+  } catch (error) {
+      res.status(500).send("Server error creating product")
+      console.log(error)
   }
-
-  const product =await new Product({
-    name,
-    price,
-    description,
-    mediaUrl
-  }).save()
-
-  res.status(201).json(product)
+  
 }
