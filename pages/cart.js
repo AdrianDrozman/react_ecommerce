@@ -10,6 +10,8 @@ import cookie from 'js-cookie';
 
 function Cart({ products, user }) {
   const [cartProducts, setCartProducts] = useState(products);
+  const [success,setSuccess] = useState(false)
+  const [loading,setLoading] = useState(false)
 
   async function handleRemoveFromCart(productId) {
     const url = `${baseUrl}/api/cart`;
@@ -22,15 +24,32 @@ function Cart({ products, user }) {
     setCartProducts(response.data);
   }
 
+async function handleCheckout(paymentData){
+  try{
+    setLoading(true)
+    const url = `${baseUrl}/api/checkout`
+    const token = cookie.get('token')
+    const payload ={paymentData}
+    const headers={headers:{Authorization:token}}
+    axios.post(url,payload,headers)
+    setSuccess(true)
+  }catch(error){
+    catchErrors(error,window.alert)
+  }finally{
+    setLoading(false)
+  }
+}
+
   return (
-    <Segment>
+    <Segment loading={loading}>
       <CartItemList 
         handleRemoveFromCart={handleRemoveFromCart}
         products={cartProducts}
         user={user}
+        success={success}
         
       />
-      <CartSummary products={cartProducts} />
+      <CartSummary success={success} products={cartProducts} handleCheckout={handleCheckout} />
     </Segment>
   );
 }
