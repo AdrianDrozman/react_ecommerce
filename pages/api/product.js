@@ -60,6 +60,6 @@ async function handlePostRequest(req, res) {
     res.status(201).json(product);
   } catch (error) {
     res.status(500).send('Server error creating product');
-    console.log(error);
+    console.error(error);
   }
 }
