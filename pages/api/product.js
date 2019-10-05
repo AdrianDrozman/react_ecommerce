@@ -1,4 +1,5 @@
 import Product from '../../models/Product';
+import Cart from '../../models/Cart';
 import connectDb from '../../utils/connectDb';
 
 connectDb();
@@ -22,6 +23,12 @@ export default async (req, res) => {
 async function handleGetRequest(req, res) {
   const { _id } = req.query;
   const product = await Product.findOne({ _id });
+  await Cart.updateMany(
+    {
+      'products.product': _id
+    },
+    { $pull: { products: { product: _id } } }
+  );
   res.status(200).json(product);
 }
 
@@ -29,31 +36,30 @@ async function handleDeleteRequest(req, res) {
   const { _id } = req.query;
   try {
     await Product.findOneAndDelete({ _id });
-  res.status(204).json({});
+    res.status(204).json({});
   } catch (error) {
-    console.log(error)
+    console.error(error);
+    res.status(500).send('Error deleting product');
   }
-  
 }
 
-async function handlePostRequest(req,res){
-  const { name,price,mediaUrl,description} = req.body;
+async function handlePostRequest(req, res) {
+  const { name, price, mediaUrl, description } = req.body;
   try {
-    if(!name || !price || !description || !mediaUrl){
-      return res.status(422).send("Product missing one or more fields")
+    if (!name || !price || !description || !mediaUrl) {
+      return res.status(422).send('Product missing one or more fields');
     }
-  
-    const product =await new Product({
+
+    const product = await new Product({
       name,
       price,
       description,
       mediaUrl
-    }).save()
-  
-    res.status(201).json(product)
+    }).save();
+
+    res.status(201).json(product);
   } catch (error) {
-      res.status(500).send("Server error creating product")
-      console.log(error)
+    res.status(500).send('Server error creating product');
+    console.log(error);
   }
-  
 }
