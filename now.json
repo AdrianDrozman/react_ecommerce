@@ -1,7 +1,7 @@
 {
   "name": "next-mag",
   "alias": "next-mag.now.sh",
-  "version": 1,
+  "version": 2,
   "env": {
     "MONGO_SRV": "mongodb+srv://adyy123:VTq4rvHatS0tYvEQ@cluster0-3evgu.mongodb.net/test?retryWrites=true&w=majority",
     "JWT_SECRET": "dfdsfsfdsfdsvbcewq",
