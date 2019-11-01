@@ -6,6 +6,7 @@ export const handleLogin = token => {
   Router.push('/account');
 };
 
+
 export const redirectUser = (ctx, location) => {
   if (ctx.req) {
     ctx.res.writeHead(302, {
